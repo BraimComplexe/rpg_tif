@@ -42,7 +42,6 @@ def die():
 
 def game(DEBUG=False):
     # global variables
-    time = config.start_hour * 60  # 16 hours
     energy = Energy(100)
 
     # needed for advancement
@@ -498,7 +497,11 @@ def game(DEBUG=False):
             (not diploma) or (not hamac_quest) or (
     not babyfoot)):  # TODO: check constraints
         clear_screen()
+
+        print('\n\n')
         print_INFO(time, energy)
+        print('\n\nQue faire ?\n\n')
+
         if DEBUG:
             print(
                 f"diplome = {diploma}, hamac_quest = {hamac_quest}, babyfoot = {babyfoot}")
@@ -506,13 +509,14 @@ def game(DEBUG=False):
         to_display_menu = display_menu(time, hamac_quest, diploma, babyfoot,
                                        eaten)
         menu_choice = check_input('\n'.join(
-            [f'Tape {key} pour {value}' for key, value in
+            [f'- {value} [{key}]' for key, value in
              to_display_menu.items()]) + '\n',
-                                  [str(k) for k in to_display_menu])
+                                  [str(k) for k in to_display_menu.keys()])
 
         # HAMAC
         # 14 people max can vote
         if menu_choice == '0':
+            ### HAMAC_QUEST
             clear_screen()
 
             print(p_color("narration/quetes_paralleles/hamac/HAMAC.txt"))
@@ -526,18 +530,22 @@ def game(DEBUG=False):
             print(f'Il y a {len(hamac_votes)} personnes pour le hamac sur 14.')
 
             # try convince some people
-            # TODO: il manque les fioritures la: le sprobas qui changent en fonction de la conversation
+            # TODO: il manque les fioritures la: les probas qui changent en fonction de la conversation
             print(p_color("narration/quetes_paralleles/hamac/FELIPE.txt"))
             convince_hamac = check_input("", ["T", "F"])
             if convince_hamac == 'T':
                 rd = random.random()
                 time += config.convince_felipe_dt
                 energy += config.convince_felipe_de
+
                 if rd < config.convince_felipe_proba:
                     hamac_votes.append('felipe')
                     print(p_color("narration/quetes_paralleles/hamac/FELIPE_success_convaincre.txt"))
                 else:
                     print(p_color("narration/quetes_paralleles/hamac/FELIPE_fail_convaincre.txt"))
+
+                print_result_action(config.convince_felipe_dt, config.convince_felipe_de)
+                print_INFO(time, energy)
 
             else:
                 print(p_color("narration/quetes_paralleles/hamac/FELIPE_ignorer.txt"))
@@ -556,6 +564,9 @@ def game(DEBUG=False):
                 else:
                     print(p_color("narration/quetes_paralleles/hamac/TONI_fail_convaincre.txt"))
 
+                print_result_action(config.convince_tony_dt, config.convince_tony_de)
+                print_INFO(time, energy)
+
             else:
                 print(p_color("narration/quetes_paralleles/hamac/TONI_ignorer.txt"))
             input("")
@@ -567,11 +578,15 @@ def game(DEBUG=False):
                 rd = random.random()
                 time += config.convince_lisa_dt
                 energy += config.convince_lisa_de
+
                 if rd < config.convince_lisa_proba:
                     hamac_votes.append('lisa')
                     print(p_color("narration/quetes_paralleles/hamac/LISA_success_convaincre.txt"))
                 else:
                     print(p_color("narration/quetes_paralleles/hamac/LISA_fail_convaincre.txt"))
+
+                print_result_action(config.convince_lisa_dt, config.convince_lisa_de)
+                print_INFO(time, energy)
 
             else:
                 print(p_color("narration/quetes_paralleles/hamac/LISA_ignorer.txt"))
@@ -587,13 +602,17 @@ def game(DEBUG=False):
                 print(f'Quete HAMAC reussie !')
                 hamac_weapon = True
                 energy += config.winning_hamac_de
+                print_result_action(0, config.winning_hammac_de)
             else:
                 print(p_color("narration/quetes_paralleles/hamac/final_failed.txt"))
                 # couch with auguste
                 covid = True
                 energy += config.loosing_hamac_de
+                print_result_action(0, config.loosing_hamac_de)
 
             time += config.hamac_quest_dt
+            print_result_action(config.hamac_quest_dt, 0)
+            print_INFO(time, energy)
             hamac_quest = True
 
             if DEBUG:
@@ -606,57 +625,52 @@ def game(DEBUG=False):
 
         # DIPLOMA
         elif menu_choice == '1':
-			diploma_dir = "narration/diploma/"
-			if time >= config.diploma_deadline:
-				print(p_color(diploma_dir + "vigile.txt"))
-				return
-			
-			## A quoi ça sert ???
-            #if time >= config.admin_deadline * 60:
-            #    # after 5 pm
-            #    time = config.end_hour * 60
-            #    break
+            diploma_dir = "narration/diploma/"
+            if time >= config.diploma_deadline * 60:
+                # after 5 pm
+                print(p_color(diploma_dir + "vigile.txt"))
+                return
 
             # Lina's signature sequence
             if alexis:
                 time += config.if_alexis_lina_dt
-				print(p_color(diploma_dir + "lina_with_alexis.txt"))
-				print_result_action(config.if_alexis_lina_dt, config.if_alexis_lina_de)
+                print(p_color(diploma_dir + "lina_with_alexis.txt"))
+                print_result_action(config.if_alexis_lina_dt, config.if_alexis_lina_de)
             else:
                 if time <= config.admin_lina_deadline * 60:
                     # before 2 pm
-					print(p_color(diploma_dir + "wait_for_lina.txt"))
-					print_result_action(config.admin_lina_deadline * 60 - time, 0)
+                    print(p_color(diploma_dir + "wait_for_lina.txt"))
+                    print_result_action(config.admin_lina_deadline * 60 - time, 0)
                     time = config.admin_lina_deadline * 60
-					
+
                 time += config.if_not_alexis_lina_dt
-				print(p_color(diploma_dir + "lina_wo_alexis.txt"))
-				print_result_action(config.if_not_alexis_lina_dt, config.if_not_alexis_lina_de)
+                print(p_color(diploma_dir + "lina_wo_alexis.txt"))
+                print_result_action(config.if_not_alexis_lina_dt, config.if_not_alexis_lina_de)
 
             # Paoletti's signature sequence
             if alexis:
                 time += config.if_alexis_paoletti_dt
-				print(p_color(diploma_dir + "paoletti_with_alexis.txt"))
-				print_result_action(config.if_alexis_paoletti_dt, config.if_alexis_paoletti_de)
+                print(p_color(diploma_dir + "paoletti_with_alexis.txt"))
+                print_result_action(config.if_alexis_paoletti_dt, config.if_alexis_paoletti_de)
             else:
                 time += config.if_not_alexis_paoletti_dt
-				print(p_color(diploma_dir + "paoletti_wo_alexis.txt"))
-				print_result_action(config.if_not_alexis_paoletti_dt, config.if_not_alexis_paoletti_de)
+                print(p_color(diploma_dir + "paoletti_wo_alexis.txt"))
+                print_result_action(config.if_not_alexis_paoletti_dt, config.if_not_alexis_paoletti_de)
 
             # Auguste's signature sequence
             if alexis:
                 time += config.if_alexis_auguste_dt
-				print(p_color(diploma_dir + "auguste_with_alexis.txt"))
-				print_result_action(config.if_alexis_auguste_dt, config.if_alexis_auguste_de)
+                print(p_color(diploma_dir + "auguste_with_alexis.txt"))
+                print_result_action(config.if_alexis_auguste_dt, config.if_alexis_auguste_de)
             else:
                 time += config.if_not_alexis_auguste_dt
-				print(p_color(diploma_dir + "auguste_wo_alexis.txt"))
-				print_result_action(config.if_not_alexis_auguste_dt, config.if_not_alexis_auguste_de)
+                print(p_color(diploma_dir + "auguste_wo_alexis.txt"))
+                print_result_action(config.if_not_alexis_auguste_dt, config.if_not_alexis_auguste_de)
 
             # diploma quest achieved
             diploma = True
 
-			print(p_color(diploma_dir + "rencontre_felipe.txt"))
+            print(p_color(diploma_dir + "rencontre_felipe.txt"))
             # meet with Felipe
             felipe_badge = True
 
@@ -668,8 +682,12 @@ def game(DEBUG=False):
 
         # BABYFOOT
         elif menu_choice == '2':
+            print(p_color("narration/quetes_paralleles/babyfoot/babyfoot_tournament.txt"))
+
             if fungus:
+                print(p_color("narration/quetes_paralleles/babyfoot/fungus_handicap.txt"))
                 energy += config.if_fungus_de
+                print_result_action(0, config.if_fungus_de)
 
             # compliment Maxime and Nikita
             hamac_votes.extend(['nikita', 'maxime'])
@@ -700,25 +718,35 @@ def game(DEBUG=False):
 
         # LUNCH
         elif menu_choice == '3':
+            clear_screen()
             if time <= config.tony_lunch_deadline * 60:
                 # lunch with Tony
+                print(p_color("narration/quetes_paralleles/manger/toni/toni.txt"))
                 selfie = True
             else:
                 # eat with Solene and Elise
                 hamac_votes.extend(['elise', 'raphael', 'solene'])
                 # cure fungal infection?
+                print(p_color("narration/quetes_paralleles/manger/elise_solene/elise_solene.txt"))
                 fungal_choice = check_input(
                     "Pour ton champignon, tu suis le conseil d'Elise [0] ou de Solene[1] ?",
                     ["0", "1"])
                 if fungal_choice == '0':
                     # elise: the fungal infection grows worse
+                    print(p_color("narration/quetes_paralleles/manger/elise_solene/elise.txt"))
                     fungus = True
                 else:
                     # solene: the fungal infection is cured
+                    print(p_color("narration/quetes_paralleles/manger/elise_solene/elise.txt"))
                     energy += config.fungal_de
+                    print_result_action(0, config.fungal_de)
 
             time += config.lunch_dt
+            print_result_action(config.lunch_dt, 0)
+            print_INFO(time, energy)
             eaten = True
+            input('')
+            clear_screen()
 
             if DEBUG:
                 print('\nLUNCH')
